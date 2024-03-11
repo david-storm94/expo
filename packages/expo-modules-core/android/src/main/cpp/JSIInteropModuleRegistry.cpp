@@ -11,32 +11,16 @@
 
 #include <memory>
 
+#if IS_NEW_ARCHITECTURE_ENABLED
+
+#include "BridgelessJSCallInvoker.h"
+
+#endif
+
 namespace jni = facebook::jni;
 namespace jsi = facebook::jsi;
 
 namespace expo {
-
-#if IS_NEW_ARCHITECTURE_ENABLED
-
-class BridgelessJSCallInvoker : public react::CallInvoker {
-public:
-  explicit BridgelessJSCallInvoker(react::RuntimeExecutor runtimeExecutor) : runtimeExecutor_(
-    std::move(runtimeExecutor)) {}
-
-  void invokeAsync(std::function<void()> &&func) noexcept override {
-    runtimeExecutor_([func = std::move(func)](jsi::Runtime &runtime) { func(); });
-  }
-
-  void invokeSync(std::function<void()> &&func) override {
-    throw std::runtime_error(
-      "Synchronous native -> JS calls are currently not supported.");
-  }
-
-private:
-  react::RuntimeExecutor runtimeExecutor_;
-};
-
-#endif
 
 jni::local_ref<JSIInteropModuleRegistry::jhybriddata>
 JSIInteropModuleRegistry::initHybrid(jni::alias_ref<jhybridobject> jThis) {
