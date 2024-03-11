@@ -16,6 +16,28 @@ namespace jsi = facebook::jsi;
 
 namespace expo {
 
+#if IS_NEW_ARCHITECTURE_ENABLED
+
+class BridgelessJSCallInvoker : public react::CallInvoker {
+public:
+  explicit BridgelessJSCallInvoker(react::RuntimeExecutor runtimeExecutor) : runtimeExecutor_(
+    std::move(runtimeExecutor)) {}
+
+  void invokeAsync(std::function<void()> &&func) noexcept override {
+    runtimeExecutor_([func = std::move(func)](jsi::Runtime &runtime) { func(); });
+  }
+
+  void invokeSync(std::function<void()> &&func) override {
+    throw std::runtime_error(
+      "Synchronous native -> JS calls are currently not supported.");
+  }
+
+private:
+  react::RuntimeExecutor runtimeExecutor_;
+};
+
+#endif
+
 jni::local_ref<JSIInteropModuleRegistry::jhybriddata>
 JSIInteropModuleRegistry::initHybrid(jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);
@@ -25,6 +47,10 @@ void JSIInteropModuleRegistry::registerNatives() {
   registerHybrid({
                    makeNativeMethod("initHybrid", JSIInteropModuleRegistry::initHybrid),
                    makeNativeMethod("installJSI", JSIInteropModuleRegistry::installJSI),
+#if IS_NEW_ARCHITECTURE_ENABLED
+                   makeNativeMethod("installJSIForBridgeless",
+                                    JSIInteropModuleRegistry::installJSIForBridgeless),
+#endif
                    makeNativeMethod("installJSIForTests",
                                     JSIInteropModuleRegistry::installJSIForTests),
                    makeNativeMethod("evaluateScript", JSIInteropModuleRegistry::evaluateScript),
@@ -52,20 +78,32 @@ void JSIInteropModuleRegistry::installJSI(
   jni::alias_ref<JNIDeallocator::javaobject> jniDeallocator,
   jni::alias_ref<react::CallInvokerHolder::javaobject> jsInvokerHolder
 ) {
-  this->jniDeallocator = jni::make_global(jniDeallocator);
-
-  auto runtime = reinterpret_cast<jsi::Runtime *>(jsRuntimePointer);
-
-  jsRegistry = std::make_unique<JSReferencesCache>(*runtime);
-
-  runtimeHolder = std::make_shared<JavaScriptRuntime>(
-    this,
-    runtime,
+  prepareJSIInterop(
+    jsRuntimePointer,
+    jniDeallocator,
     jsInvokerHolder->cthis()->getCallInvoker()
   );
 
   prepareRuntime();
 }
+
+#if IS_NEW_ARCHITECTURE_ENABLED
+
+void JSIInteropModuleRegistry::installJSIForBridgeless(
+  jlong jsRuntimePointer,
+  jni::alias_ref<JNIDeallocator::javaobject> jniDeallocator,
+  jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutor
+) {
+  prepareJSIInterop(
+    jsRuntimePointer,
+    jniDeallocator,
+    std::make_shared<BridgelessJSCallInvoker>(runtimeExecutor->cthis()->get())
+  );
+
+  prepareRuntime();
+}
+
+#endif
 
 void JSIInteropModuleRegistry::installJSIForTests(
   jni::alias_ref<JNIDeallocator::javaobject> jniDeallocator
@@ -82,6 +120,22 @@ void JSIInteropModuleRegistry::installJSIForTests(
 
   prepareRuntime();
 #endif // !UNIT_TEST
+}
+
+void JSIInteropModuleRegistry::prepareJSIInterop(
+  jlong jsRuntimePointer,
+  jni::alias_ref<JNIDeallocator::javaobject> jniDeallocator,
+  std::shared_ptr<react::CallInvoker> callInvoker
+) {
+  this->jniDeallocator = jni::make_global(jniDeallocator);
+  auto runtime = reinterpret_cast<jsi::Runtime *>(jsRuntimePointer);
+  jsRegistry = std::make_unique<JSReferencesCache>(*runtime);
+
+  runtimeHolder = std::make_shared<JavaScriptRuntime>(
+    this,
+    runtime,
+    std::move(callInvoker)
+  );
 }
 
 void JSIInteropModuleRegistry::prepareRuntime() {
