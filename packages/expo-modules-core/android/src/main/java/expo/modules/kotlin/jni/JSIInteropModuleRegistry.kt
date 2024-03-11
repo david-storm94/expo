@@ -44,14 +44,14 @@ class JSIInteropModuleRegistry : Destructible {
     )
   }
 
-  fun installJSIForBridless(
+  fun installJSIForBridgeless(
     appContext: AppContext,
     jsRuntimePointer: Long,
     jniDeallocator: JNIDeallocator,
     runtimeExecutor: RuntimeExecutor
   ) {
     appContextHolder = appContext.weak()
-    installJSIForBridless(
+    installJSIForBridgeless(
       jsRuntimePointer,
       jniDeallocator,
       runtimeExecutor
@@ -68,7 +68,7 @@ class JSIInteropModuleRegistry : Destructible {
     jsInvokerHolder: CallInvokerHolderImpl
   )
 
-  private external fun installJSIForBridless(
+  private external fun installJSIForBridgeless(
     jsRuntimePointer: Long,
     jniDeallocator: JNIDeallocator,
     runtimeExecutor: RuntimeExecutor
