@@ -150,7 +150,7 @@ class VideoPlayer(context: Context, appContext: AppContext, private val mediaIte
     playbackServiceBinder?.service?.unregisterPlayer(player)
     VideoManager.unregisterVideoPlayer(this@VideoPlayer)
 
-    appContext.mainQueue.launch {
+    appContext?.mainQueue?.launch {
       player.removeListener(playerListener)
       player.release()
     }
