@@ -3,7 +3,7 @@ import NativeVideoModule from './NativeVideoModule';
 import NativeVideoView from './NativeVideoView';
 export function useVideoPlayer(source) {
     const parsedSource = typeof source === 'string' ? { uri: source } : source;
-    return useReleasingSharedObject(() => new NativeVideoModule.VideoPlayer(parsedSource), [parsedSource?.uri, ...Object.values(parsedSource?.drm ?? {})]);
+    return useReleasingSharedObject(() => new NativeVideoModule.VideoPlayer(parsedSource), [JSON.stringify(parsedSource)]);
 }
 /**
  * Returns whether the current device supports Picture in Picture (PiP) mode.
@@ -84,6 +84,8 @@ function useReleasingSharedObject(factory, dependencies) {
         // If the dependencies have changed, release the previous object and create a new one, otherwise this has been called
         // because of a fast refresh, and we don't want to release the object.
         if (!newObject || !dependenciesAreEqual) {
+            // TODO: Remove this annotation once SharedObject type is added
+            // @ts-ignore - This is already implemented, types haven't been added yet
             objectRef.current?.release();
             newObject = factory();
             objectRef.current = newObject;
@@ -99,6 +101,8 @@ function useReleasingSharedObject(factory, dependencies) {
         return () => {
             // This will be called on every fast refresh and on unmount, but we only want to release the object on unmount.
             if (!isFastRefresh.current && objectRef.current) {
+                // TODO: Remove this annotation once SharedObject type is added
+                // @ts-ignore - This is already implemented, types haven't been added yet.
                 objectRef.current.release();
             }
         };

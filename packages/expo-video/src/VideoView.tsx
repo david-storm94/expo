@@ -17,7 +17,7 @@ export function useVideoPlayer(source: VideoSource): VideoPlayer {
 
   return useReleasingSharedObject(
     () => new NativeVideoModule.VideoPlayer(parsedSource),
-    [parsedSource?.uri, ...Object.values(parsedSource?.drm ?? {})]
+    [JSON.stringify(parsedSource)]
   );
 }
 
@@ -114,6 +114,8 @@ function useReleasingSharedObject<T>(factory: () => T, dependencies: DependencyL
     // If the dependencies have changed, release the previous object and create a new one, otherwise this has been called
     // because of a fast refresh, and we don't want to release the object.
     if (!newObject || !dependenciesAreEqual) {
+      // TODO: Remove this annotation once SharedObject type is added
+      // @ts-ignore - This is already implemented, types haven't been added yet
       objectRef.current?.release();
       newObject = factory();
       objectRef.current = newObject;
@@ -130,6 +132,8 @@ function useReleasingSharedObject<T>(factory: () => T, dependencies: DependencyL
     return () => {
       // This will be called on every fast refresh and on unmount, but we only want to release the object on unmount.
       if (!isFastRefresh.current && objectRef.current) {
+        // TODO: Remove this annotation once SharedObject type is added
+        // @ts-ignore - This is already implemented, types haven't been added yet.
         objectRef.current.release();
       }
     };
