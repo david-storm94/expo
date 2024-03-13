@@ -40,6 +40,7 @@
 - Move cli and utils subpackages to new expo-module-scripts system. ([#27083](https://github.com/expo/expo/pull/27083) by [@wschurman](https://github.com/wschurman))
 - Remove legacy expo bundle-assets utilities. ([#27123](https://github.com/expo/expo/pull/27123) by [@wschurman](https://github.com/wschurman))
 - [iOS] Moved expo-dev-client + expo-updates interop setup out from `application:willFinishLaunchingWithOptions:`. ([#27477](https://github.com/expo/expo/pull/27477) by [@kudo](https://github.com/kudo))
+- [Android] Added bridgeless support on ReactNativeHostHandler. ([#27629](https://github.com/expo/expo/pull/27629) by [@kudo](https://github.com/kudo))
 
 ## 0.24.11 - 2024-02-16
 
