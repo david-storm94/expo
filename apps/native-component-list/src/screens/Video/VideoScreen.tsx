@@ -98,13 +98,16 @@ export default function VideoScreen() {
       player.loop = loop;
       setLoop(loop);
     },
-    [loop]
+    [loop, player]
   );
 
-  const updatePreservesPitch = useCallback((correctPitch: boolean) => {
-    player.preservesPitch = correctPitch;
-    setCorrectsPitch(correctPitch);
-  }, []);
+  const updatePreservesPitch = useCallback(
+    (correctPitch: boolean) => {
+      player.preservesPitch = correctPitch;
+      setCorrectsPitch(correctPitch);
+    },
+    [player]
+  );
 
   useEffect(() => {
     player.play();
