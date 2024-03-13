@@ -1,3 +1,4 @@
+import { SharedObject } from 'expo-modules-core';
 import {
   ReactNode,
   PureComponent,
@@ -93,10 +94,11 @@ function getPlayerId(player: number | VideoPlayer): number | null {
 
 /**
  * Returns a shared object, which is automatically cleaned up when the component is unmounted.
- *
- * TODO: when SharedObject type is added make T extend it
  */
-function useReleasingSharedObject<T>(factory: () => T, dependencies: DependencyList): T {
+function useReleasingSharedObject<T extends SharedObject>(
+  factory: () => T,
+  dependencies: DependencyList
+): T {
   const objectRef = useRef<T | null>(null);
   const isFastRefresh = useRef(false);
   const previousDependencies = useRef<DependencyList>(dependencies);
@@ -114,8 +116,6 @@ function useReleasingSharedObject<T>(factory: () => T, dependencies: DependencyL
     // If the dependencies have changed, release the previous object and create a new one, otherwise this has been called
     // because of a fast refresh, and we don't want to release the object.
     if (!newObject || !dependenciesAreEqual) {
-      // TODO: Remove this annotation once SharedObject type is added
-      // @ts-ignore - This is already implemented, types haven't been added yet
       objectRef.current?.release();
       newObject = factory();
       objectRef.current = newObject;
@@ -132,8 +132,6 @@ function useReleasingSharedObject<T>(factory: () => T, dependencies: DependencyL
     return () => {
       // This will be called on every fast refresh and on unmount, but we only want to release the object on unmount.
       if (!isFastRefresh.current && objectRef.current) {
-        // TODO: Remove this annotation once SharedObject type is added
-        // @ts-ignore - This is already implemented, types haven't been added yet.
         objectRef.current.release();
       }
     };

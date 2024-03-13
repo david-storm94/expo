@@ -11,6 +11,7 @@ import { UnavailabilityError } from './errors/UnavailabilityError';
 import './sweet/setUpErrorManager.fx';
 
 export type * from './ts-declarations/global';
+export type * from './ts-declarations/SharedObject';
 
 export { default as uuid } from './uuid';
 
